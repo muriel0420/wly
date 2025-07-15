@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>二舅视频评论数据分析报告</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -48,7 +45,7 @@
       }
       .bg-texture {
         background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d2b48c' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
-      }
+          }
     }
   </style>
 </head>
@@ -57,8 +54,7 @@
   <!-- 导航栏 -->
   <nav class="fixed w-full bg-white/90 backdrop-blur-sm shadow-md z-50 transition-all duration-300" id="navbar">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-2">
-        <i class="fa fa-bar-chart text-primary text-xl"></i>
+      <div class="flex items-center space-x-2 mb-3 md:mb-0">
         <span class="font-serif font-bold text-lg text-primary">二舅视频评论分析</span>
       </div>
       <div class="hidden md:flex space-x-8">
@@ -71,7 +67,7 @@
         <a href="#conclusion" class="hover:text-primary transition-colors">结论</a>
       </div>
       <button class="md:hidden text-primary" id="menuToggle">
-        <i class="fa fa-bars text-xl"></i>
+        菜单
       </button>
     </div>
     <!-- 移动端菜单 -->
@@ -111,8 +107,8 @@
       </h2>
       
       <div class="flex justify-center animate-bounce">
-        <a href="#intro" class="text-white">
-          <i class="fa fa-angle-down text-3xl"></i>
+        <a href="#intro" class="text-white text-3xl">
+          ↓
         </a>
       </div>
     </div>
@@ -163,7 +159,7 @@
         <div class="grid md:grid-cols-3 gap-8">
           <div class="bg-neutral p-6 rounded-lg transition-transform hover:transform hover:scale-105">
             <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <i class="fa fa-filter text-primary text-xl"></i>
+              <span class="text-primary text-xl font-bold">1</span>
             </div>
             <h3 class="font-serif font-bold text-xl mb-3">数据清洗</h3>
             <p>
@@ -173,7 +169,7 @@
           
           <div class="bg-neutral p-6 rounded-lg transition-transform hover:transform hover:scale-105">
             <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <i class="fa fa-scissors text-primary text-xl"></i>
+              <span class="text-primary text-xl font-bold">2</span>
             </div>
             <h3 class="font-serif font-bold text-xl mb-3">分词处理</h3>
             <p>
@@ -183,7 +179,7 @@
           
           <div class="bg-neutral p-6 rounded-lg transition-transform hover:transform hover:scale-105">
             <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <i class="fa fa-trash text-primary text-xl"></i>
+              <span class="text-primary text-xl font-bold">3</span>
             </div>
             <h3 class="font-serif font-bold text-xl mb-3">停用词过滤</h3>
             <p>
@@ -196,8 +192,8 @@
       <div class="flex justify-center">
         <div class="w-full max-w-2xl bg-white p-6 rounded-lg shadow-md">
           <div class="flex items-center mb-4">
-            <i class="fa fa-code text-primary mr-3"></i>
-            <h4 class="font-bold">分词示例</h4>
+            <span class="text-primary font-bold mr-3">示例：</span>
+            <h4 class="font-bold">分词效果</h4>
           </div>
           <div class="bg-gray-100 p-4 rounded border-l-4 border-primary">
             <p class="italic">"二舅的故事治愈了我的内耗"</p>
@@ -205,8 +201,7 @@
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
     <!-- 情感倾向分析 -->
     <section id="sentiment" class="mb-24 section-fade">
@@ -225,15 +220,15 @@
             <h3 class="font-serif font-bold text-xl mb-4">分析方法</h3>
             <ul class="space-y-3">
               <li class="flex items-start">
-                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                <span class="text-primary font-bold mt-1 mr-3">•</span>
                 <span>词典法：比对BosonNLP情感词典计算词语情感强度</span>
               </li>
               <li class="flex items-start">
-                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                <span class="text-primary font-bold mt-1 mr-3">•</span>
                 <span>SnowNLP模型：直接输出0-1的情感分值，越接近1表示越积极</span>
               </li>
               <li class="flex items-start">
-                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                <span class="text-primary font-bold mt-1 mr-3">•</span>
                 <span>两种方法交叉验证，最终采用SnowNLP结果</span>
               </li>
             </ul>
@@ -250,8 +245,8 @@
         <div class="md:w-1/2">
           <div class="bg-white p-6 rounded-lg shadow-md h-full">
             <h3 class="font-serif font-bold text-xl mb-6 text-center">情感分析结果</h3>
-            <div class="h-80">
-              <canvas id="sentimentChart"></canvas>
+            <div class="h-80 flex items-center justify-center">
+              <img src="senti_pie.png" alt="情感分析饼图" class="max-h-full max-w-full object-contain rounded" />
             </div>
             <div class="mt-6 grid grid-cols-3 gap-4 text-center">
               <div class="p-3 bg-green-50 rounded">
@@ -282,7 +277,7 @@
       <div class="flex flex-col md:flex-row gap-10 items-center">
         <div class="md:w-1/2">
           <div class="bg-white p-6 rounded-lg shadow-md h-96 flex items-center justify-center">
-            <img src="wordcloud_custom.png" alt="词云图" class="max-h-full max-w-full object-contain rounded" />
+            <img src="gwordcloud_custom.png" alt="词云图" class="max-h-full max-w-full object-contain rounded" />
           </div>
         </div>
         
@@ -295,7 +290,7 @@
             <div class="bg-white p-5 rounded-lg shadow-sm">
               <h3 class="font-serif font-bold text-xl mb-3 flex items-center">
                 <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
-                  <i class="fa fa-heart text-primary"></i>
+                  <span class="text-primary font-bold">1</span>
                 </span>
                 情感表达类
               </h3>
@@ -305,7 +300,7 @@
             <div class="bg-white p-5 rounded-lg shadow-sm">
               <h3 class="font-serif font-bold text-xl mb-3 flex items-center">
                 <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
-                  <i class="fa fa-bookmark text-primary"></i>
+                  <span class="text-primary font-bold">2</span>
                 </span>
                 核心主题类
               </h3>
@@ -315,7 +310,7 @@
             <div class="bg-white p-5 rounded-lg shadow-sm">
               <h3 class="font-serif font-bold text-xl mb-3 flex items-center">
                 <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
-                  <i class="fa fa-lightbulb-o text-primary"></i>
+                  <span class="text-primary font-bold">3</span>
                 </span>
                 延伸思考类
               </h3>
@@ -451,7 +446,7 @@
           <ul class="space-y-4">
             <li class="flex items-start">
               <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
-                <span class="text-primary text-sm">1</span>
+                <span class="text-primary text-sm font-bold">1</span>
               </div>
               <div>
                 <p class="font-medium">"内耗"与"精神""治愈"的共现次数达67次，形成次级关联网络</p>
@@ -460,7 +455,7 @@
             </li>
             <li class="flex items-start">
               <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
-                <span class="text-primary text-sm">2</span>
+                <span class="text-primary text-sm font-bold">2</span>
               </div>
               <div>
                 <p class="font-medium">"感动"与"人生""共鸣"的共现次数达58次</p>
@@ -469,7 +464,7 @@
             </li>
             <li class="flex items-start">
               <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
-                <span class="text-primary text-sm">3</span>
+                <span class="text-primary text-sm font-bold">3</span>
               </div>
               <div>
                 <p class="font-medium">网络可分为"情感表达""人生思考""社会观察"三个聚类</p>
@@ -498,7 +493,7 @@
             <div class="md:w-1/4">
               <div class="bg-primary/10 h-full rounded-lg p-6 flex flex-col items-center justify-center text-center">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
-                  <i class="fa fa-heart text-primary text-2xl"></i>
+                  <span class="text-primary text-2xl font-bold">1</span>
                 </div>
                 <h3 class="font-serif font-bold text-xl">情感层面</h3>
               </div>
@@ -514,7 +509,7 @@
             <div class="md:w-1/4">
               <div class="bg-primary/10 h-full rounded-lg p-6 flex flex-col items-center justify-center text-center">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
-                  <i class="fa fa-eye text-primary text-2xl"></i>
+                  <span class="text-primary text-2xl font-bold">2</span>
                 </div>
                 <h3 class="font-serif font-bold text-xl">内容关注</h3>
               </div>
@@ -541,7 +536,7 @@
             <div class="md:w-1/4">
               <div class="bg-primary/10 h-full rounded-lg p-6 flex flex-col items-center justify-center text-center">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
-                  <i class="fa fa-share-alt text-primary text-2xl"></i>
+                  <span class="text-primary text-2xl font-bold">3</span>
                 </div>
                 <h3 class="font-serif font-bold text-xl">传播特性</h3>
               </div>
@@ -568,7 +563,6 @@
       <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="mb-6 md:mb-0">
           <div class="flex items-center space-x-2 mb-3">
-            <i class="fa fa-bar-chart text-accent text-xl"></i>
             <span class="font-serif font-bold text-lg">二舅视频评论分析报告</span>
           </div>
           <p class="text-gray-400">基于1500条B站评论数据的可视化分析</p>
@@ -576,13 +570,13 @@
         
         <div class="flex space-x-6">
           <a href="#" class="text-gray-400 hover:text-accent transition-colors">
-            <i class="fa fa-github text-xl"></i>
+            GitHub
           </a>
           <a href="#" class="text-gray-400 hover:text-accent transition-colors">
-            <i class="fa fa-twitter text-xl"></i>
+            相关链接
           </a>
           <a href="#" class="text-gray-400 hover:text-accent transition-colors">
-            <i class="fa fa-linkedin text-xl"></i>
+            关于
           </a>
         </div>
       </div>
@@ -644,44 +638,6 @@
     
     document.querySelectorAll('.section-fade').forEach(section => {
       observer.observe(section);
-    });
-    
-    // 情感分析图表
-    const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
-    new Chart(sentimentCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['积极评论', '中性评论', '消极评论'],
-        datasets: [{
-          data: [63.7, 20.1, 16.3],
-          backgroundColor: [
-            'rgba(75, 192, 192, 0.7)',
-            'rgba(153, 102, 255, 0.7)',
-            'rgba(255, 99, 132, 0.7)'
-          ],
-          borderColor: [
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 99, 132, 1)'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return `${context.label}: ${context.raw}%`;
-              }
-            }
-          }
-        }
-      }
     });
   </script>
 </body>
