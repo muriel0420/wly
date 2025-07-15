@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二舅视频评论数据分析报告</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8B5A2B',
+            secondary: '#D2B48C',
+            accent: '#E8C39E',
+            neutral: '#F5F1E9',
+            dark: '#3A3238'
+          },
+          fontFamily: {
+            serif: ['Noto Serif SC', 'serif'],
+            sans: ['Inter', 'sans-serif']
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .section-fade {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+      }
+      .section-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .bg-texture {
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d2b48c' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-neutral bg-texture text-dark font-sans">
+  <!-- 导航栏 -->
+  <nav class="fixed w-full bg-white/90 backdrop-blur-sm shadow-md z-50 transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-bar-chart text-primary text-xl"></i>
+        <span class="font-serif font-bold text-lg text-primary">二舅视频评论分析</span>
+      </div>
+      <div class="hidden md:flex space-x-8">
+        <a href="#intro" class="hover:text-primary transition-colors">引言</a>
+        <a href="#preprocessing" class="hover:text-primary transition-colors">数据预处理</a>
+        <a href="#sentiment" class="hover:text-primary transition-colors">情感分析</a>
+        <a href="#wordcloud" class="hover:text-primary transition-colors">词云分析</a>
+        <a href="#lda" class="hover:text-primary transition-colors">主题建模</a>
+        <a href="#cooccurrence" class="hover:text-primary transition-colors">共现网络</a>
+        <a href="#conclusion" class="hover:text-primary transition-colors">结论</a>
+      </div>
+      <button class="md:hidden text-primary" id="menuToggle">
+        <i class="fa fa-bars text-xl"></i>
+      </button>
+    </div>
+    <!-- 移动端菜单 -->
+    <div class="md:hidden hidden bg-white absolute w-full border-t" id="mobileMenu">
+      <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+        <a href="#intro" class="py-2 hover:text-primary transition-colors">引言</a>
+        <a href="#preprocessing" class="py-2 hover:text-primary transition-colors">数据预处理</a>
+        <a href="#sentiment" class="py-2 hover:text-primary transition-colors">情感分析</a>
+        <a href="#wordcloud" class="py-2 hover:text-primary transition-colors">词云分析</a>
+        <a href="#lda" class="py-2 hover:text-primary transition-colors">主题建模</a>
+        <a href="#cooccurrence" class="py-2 hover:text-primary transition-colors">共现网络</a>
+        <a href="#conclusion" class="py-2 hover:text-primary transition-colors">结论</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 英雄区域 -->
+  <header class="relative h-screen flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img src="cover.png" alt="乡村背景图" class="w-full h-full object-cover opacity-30">
+      <div class="absolute inset-0 bg-gradient-to-b from-dark/40 to-dark/70"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 z-10 text-center">
+      <div class="inline-block mb-6">
+        <div class="h-1 w-20 bg-accent mx-auto mb-2"></div>
+        <p class="text-accent font-light tracking-wider">数据分析报告</p>
+        <div class="h-1 w-20 bg-accent mx-auto mt-2"></div>
+      </div>
+      
+      <h1 class="font-serif font-bold text-[clamp(2rem,5vw,4rem)] text-white leading-tight text-shadow mb-6">
+        《回村三天，二舅治好了我的精神内耗》
+      </h1>
+      
+      <h2 class="text-[clamp(1.2rem,3vw,1.8rem)] text-accent mb-10 max-w-3xl mx-auto">
+        B站评论数据分析报告
+      </h2>
+      
+      <div class="flex justify-center animate-bounce">
+        <a href="#intro" class="text-white">
+          <i class="fa fa-angle-down text-3xl"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-16">
+    <!-- 引言部分 -->
+    <section id="intro" class="mb-24 section-fade">
+      <div class="flex flex-col md:flex-row gap-12 items-center">
+        <div class="md:w-1/2">
+          <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-6 relative inline-block">
+            引言
+            <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+          </h2>
+          <p class="text-lg leading-relaxed mb-6">
+            B站视频《回村三天，二舅治好了我的精神内耗》凭借真实的叙事与深刻的人文关怀引发广泛讨论，其评论区汇聚了大量观众的即时反馈。
+          </p>
+          <p class="text-lg leading-relaxed">
+            为深入理解观众对视频的情感态度与关注焦点，本报告基于1500条评论数据，通过数据预处理、情感分析、词云可视化、主题建模及关键词共现网络分析等方法，系统拆解评论背后的信息。
+          </p>
+          <p class="text-lg leading-relaxed mt-4">
+            分析结果不仅能呈现视频的传播效果，更能反映当代青年在"精神内耗"语境下的情感需求与价值取向。
+          </p>
+        </div>
+        <div class="md:w-1/2 bg-white p-6 rounded-lg shadow-lg">
+          <div class="h-64 md:h-80 bg-neutral rounded overflow-hidden flex items-center justify-center">
+            <img src="cover.png" alt="视频相关图片" class="w-full h-full object-cover" />
+          </div>
+          <div class="mt-4 text-center text-sm text-gray-600">
+            视频引发了广泛的社会讨论与情感共鸣
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 数据预处理 -->
+    <section id="preprocessing" class="mb-24 section-fade">
+      <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-12 relative inline-block">
+        数据预处理
+        <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+      </h2>
+      
+      <div class="bg-white rounded-xl shadow-md p-8 mb-10">
+        <p class="mb-6 text-lg">
+          为确保分析的准确性与有效性，需先对原始评论数据进行标准化处理，主要包括三个环节：
+        </p>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="bg-neutral p-6 rounded-lg transition-transform hover:transform hover:scale-105">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <i class="fa fa-filter text-primary text-xl"></i>
+            </div>
+            <h3 class="font-serif font-bold text-xl mb-3">数据清洗</h3>
+            <p>
+              移除重复内容、无效字符及广告信息，最终保留1428条有效评论，确保分析数据的纯净性。
+            </p>
+          </div>
+          
+          <div class="bg-neutral p-6 rounded-lg transition-transform hover:transform hover:scale-105">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <i class="fa fa-scissors text-primary text-xl"></i>
+            </div>
+            <h3 class="font-serif font-bold text-xl mb-3">分词处理</h3>
+            <p>
+              采用jieba分词工具对评论进行切割，例如将"二舅的故事治愈了我的内耗"拆分为独立词语。
+            </p>
+          </div>
+          
+          <div class="bg-neutral p-6 rounded-lg transition-transform hover:transform hover:scale-105">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <i class="fa fa-trash text-primary text-xl"></i>
+            </div>
+            <h3 class="font-serif font-bold text-xl mb-3">停用词过滤</h3>
+            <p>
+              参照通用中文停用词表过滤无实际意义的高频词，仅保留具有实际含义的核心词语。
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-center">
+        <div class="w-full max-w-2xl bg-white p-6 rounded-lg shadow-md">
+          <div class="flex items-center mb-4">
+            <i class="fa fa-code text-primary mr-3"></i>
+            <h4 class="font-bold">分词示例</h4>
+          </div>
+          <div class="bg-gray-100 p-4 rounded border-l-4 border-primary">
+            <p class="italic">"二舅的故事治愈了我的内耗"</p>
+            <p class="mt-2">拆分为：二舅 / 的 / 故事 / 治愈 / 了 / 我 / 的 / 内耗</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <!-- 情感倾向分析 -->
+    <section id="sentiment" class="mb-24 section-fade">
+      <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-12 relative inline-block">
+        情感倾向分析
+        <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+      </h2>
+      
+      <div class="flex flex-col md:flex-row gap-10">
+        <div class="md:w-1/2">
+          <p class="text-lg mb-6">
+            情感倾向分析旨在量化观众对视频的整体态度，结合词典法与机器学习模型（SnowNLP）实现分析，通过统计与可视化呈现结果。
+          </p>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 class="font-serif font-bold text-xl mb-4">分析方法</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start">
+                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                <span>词典法：比对BosonNLP情感词典计算词语情感强度</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                <span>SnowNLP模型：直接输出0-1的情感分值，越接近1表示越积极</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                <span>两种方法交叉验证，最终采用SnowNLP结果</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="font-serif font-bold text-xl mb-4">关键发现</h3>
+            <p class="mb-4">
+              值得注意的是，16.3%的消极评论并非针对视频本身，而是通过视频联想到自身困境或对社会现实的反思，这类评论本质上是观众借视频表达对自我与社会的思考。
+            </p>
+          </div>
+        </div>
+        
+        <div class="md:w-1/2">
+          <div class="bg-white p-6 rounded-lg shadow-md h-full">
+            <h3 class="font-serif font-bold text-xl mb-6 text-center">情感分析结果</h3>
+            <div class="h-80">
+              <canvas id="sentimentChart"></canvas>
+            </div>
+            <div class="mt-6 grid grid-cols-3 gap-4 text-center">
+              <div class="p-3 bg-green-50 rounded">
+                <p class="text-green-600 font-bold">63.7%</p>
+                <p class="text-sm">积极评论</p>
+              </div>
+              <div class="p-3 bg-gray-50 rounded">
+                <p class="text-gray-600 font-bold">20.1%</p>
+                <p class="text-sm">中性评论</p>
+              </div>
+              <div class="p-3 bg-red-50 rounded">
+                <p class="text-red-600 font-bold">16.3%</p>
+                <p class="text-sm">消极评论</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 词云图分析 -->
+    <section id="wordcloud" class="mb-24 section-fade">
+      <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-12 relative inline-block">
+        词云图分析
+        <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+      </h2>
+      
+      <div class="flex flex-col md:flex-row gap-10 items-center">
+        <div class="md:w-1/2">
+          <div class="bg-white p-6 rounded-lg shadow-md h-96 flex items-center justify-center">
+            <img src="generate_wordcloud.png" alt="词云图" class="max-h-full max-w-full object-contain rounded" />
+          </div>
+        </div>
+        
+        <div class="md:w-1/2">
+          <p class="text-lg mb-6">
+            词云图通过词语大小直观呈现高频词汇，可快速捕捉评论的核心关注点。本研究通过统计分词后的词语频率，过滤低频词与无意义高频词，最终保留50个核心词汇生成词云。
+          </p>
+          
+          <div class="space-y-6">
+            <div class="bg-white p-5 rounded-lg shadow-sm">
+              <h3 class="font-serif font-bold text-xl mb-3 flex items-center">
+                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                  <i class="fa fa-heart text-primary"></i>
+                </span>
+                情感表达类
+              </h3>
+              <p>如"喜欢""感动""歌颂"，直接反映观众对视频的正面情感</p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-lg shadow-sm">
+              <h3 class="font-serif font-bold text-xl mb-3 flex items-center">
+                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                  <i class="fa fa-bookmark text-primary"></i>
+                </span>
+                核心主题类
+              </h3>
+              <p>如"二舅""内耗""精神"，紧扣视频主线，体现视频核心内容</p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-lg shadow-sm">
+              <h3 class="font-serif font-bold text-xl mb-3 flex items-center">
+                <span class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                  <i class="fa fa-lightbulb-o text-primary"></i>
+                </span>
+                延伸思考类
+              </h3>
+              <p>如"人生""现实""时代"，体现观众从二舅的故事联想到更宏大的意义</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LDA主题建模分析 -->
+    <section id="lda" class="mb-24 section-fade">
+      <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-12 relative inline-block">
+        LDA主题建模分析
+        <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+      </h2>
+      
+      <p class="text-lg mb-10 text-center max-w-3xl mx-auto">
+        为挖掘评论背后的潜在讨论主题，本研究采用LDA模型进行主题提取，确定最佳主题数为6个，提取每个主题的前8个关键词，并结合人工解读定义主题标签。
+      </p>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
+          <div class="bg-primary/10 p-4">
+            <h3 class="font-serif font-bold text-xl">情感感动</h3>
+            <p class="text-sm text-gray-600">占比 18.6%</p>
+          </div>
+          <div class="p-5">
+            <p class="mb-3">关键词：感动、共鸣、温暖、泪目</p>
+            <p class="text-gray-600 text-sm">
+              反映了视频强大的情感感染力，是引发观众共鸣的核心因素
+            </p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
+          <div class="bg-primary/10 p-4">
+            <h3 class="font-serif font-bold text-xl">人生哲理感悟</h3>
+            <p class="text-sm text-gray-600">占比 16.2%</p>
+          </div>
+          <div class="p-5">
+            <p class="mb-3">关键词：人生、意义、思考、价值</p>
+            <p class="text-gray-600 text-sm">
+              体现视频不仅带来情感冲击，更引发了观众对人生意义的深度思考
+            </p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
+          <div class="bg-primary/10 p-4">
+            <h3 class="font-serif font-bold text-xl">时间逝忆</h3>
+            <p class="text-sm text-gray-600">占比 16%</p>
+          </div>
+          <div class="p-5">
+            <p class="mb-3">关键词：过去、回忆、岁月、时光</p>
+            <p class="text-gray-600 text-sm">
+              反映观众对时光流逝的感慨，以及对往事回忆的情感联结
+            </p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
+          <div class="bg-primary/10 p-4">
+            <h3 class="font-serif font-bold text-xl">社会反思</h3>
+            <p class="text-sm text-gray-600">占比 15.4%</p>
+          </div>
+          <div class="p-5">
+            <p class="mb-3">关键词：社会、现实、公平、苦难</p>
+            <p class="text-gray-600 text-sm">
+              体现观众从个人故事延伸到对社会现实与公平问题的思考
+            </p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
+          <div class="bg-primary/10 p-4">
+            <h3 class="font-serif font-bold text-xl">生活态度价值</h3>
+            <p class="text-sm text-gray-600">占比 14.3%</p>
+          </div>
+          <div class="p-5">
+            <p class="mb-3">关键词：乐观、坚强、生活、态度</p>
+            <p class="text-gray-600 text-sm">
+              聚焦二舅面对生活的态度，及其所传递的积极价值观
+            </p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1">
+          <div class="bg-primary/10 p-4">
+            <h3 class="font-serif font-bold text-xl">精神内耗治愈</h3>
+            <p class="text-sm text-gray-600">占比 13.5%</p>
+          </div>
+          <div class="p-5">
+            <p class="mb-3">关键词：内耗、治愈、焦虑、释怀</p>
+            <p class="text-gray-600 text-sm">
+              直接呼应视频主题，反映观众对精神内耗问题的关注与共鸣
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 关键词共现网络分析 -->
+    <section id="cooccurrence" class="mb-24 section-fade">
+      <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-12 relative inline-block">
+        关键词共现网络分析
+        <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+      </h2>
+      
+      <p class="text-lg mb-10 text-center max-w-4xl mx-auto">
+        关键词共现网络通过节点与连线呈现词语间的关联强度，可揭示评论中隐藏的语义关联。以词频前50的词语为节点，以"同一评论中共同出现"为关联条件，通过共现次数计算连线权重。
+      </p>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md mb-10">
+        <div class="h-96 flex items-center justify-center">
+          <img src="beautiful_keyword_network.png" alt="关键词共现网络图" class="max-h-full max-w-full object-contain" />
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="font-serif font-bold text-xl mb-4">核心节点分析</h3>
+          <p class="mb-4">
+            "二舅"是核心节点：其词频高达347次，度中心性为0.897（几乎与所有高频词关联），介数中心性为0.151（是连接其他词语的关键枢纽），这与"二舅"作为视频主角的地位一致。
+          </p>
+          <p>
+            与"二舅"紧密关联的词语包括"苦难"（共现128次）、"精神"（共现94次）、"生活"（共现59次），反映观众主要围绕"二舅如何面对苦难"展开讨论。
+          </p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="font-serif font-bold text-xl mb-4">次级关联网络</h3>
+          <ul class="space-y-4">
+            <li class="flex items-start">
+              <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+                <span class="text-primary text-sm">1</span>
+              </div>
+              <div>
+                <p class="font-medium">"内耗"与"精神""治愈"的共现次数达67次，形成次级关联网络</p>
+                <p class="text-gray-600 text-sm">印证了视频"治愈精神内耗"的核心主题</p>
+              </div>
+            </li>
+            <li class="flex items-start">
+              <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+                <span class="text-primary text-sm">2</span>
+              </div>
+              <div>
+                <p class="font-medium">"感动"与"人生""共鸣"的共现次数达58次</p>
+                <p class="text-gray-600 text-sm">体现观众的情感反馈与人生思考的深度绑定</p>
+              </div>
+            </li>
+            <li class="flex items-start">
+              <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+                <span class="text-primary text-sm">3</span>
+              </div>
+              <div>
+                <p class="font-medium">网络可分为"情感表达""人生思考""社会观察"三个聚类</p>
+                <p class="text-gray-600 text-sm">说明评论内容既包含个人情感，也涉及宏观思考</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结论与讨论 -->
+    <section id="conclusion" class="mb-16 section-fade">
+      <h2 class="font-serif font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-12 relative inline-block">
+        结论与讨论
+        <span class="absolute -bottom-2 left-0 h-1 w-1/2 bg-secondary"></span>
+      </h2>
+      
+      <div class="bg-white rounded-xl shadow-md p-8">
+        <p class="text-lg mb-8">
+          通过对1500条B站评论的多维度分析，可得出以下结论：
+        </p>
+        
+        <div class="space-y-10">
+          <div class="flex flex-col md:flex-row gap-6">
+            <div class="md:w-1/4">
+              <div class="bg-primary/10 h-full rounded-lg p-6 flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+                  <i class="fa fa-heart text-primary text-2xl"></i>
+                </div>
+                <h3 class="font-serif font-bold text-xl">情感层面</h3>
+              </div>
+            </div>
+            <div class="md:w-3/4 flex items-center">
+              <p class="text-lg">
+                观众对视频的整体态度以积极为主（63.7%），"感动""喜欢"等情感表达成为主流，说明二舅的故事成功引发了情感共鸣，其面对苦难的坚韧与乐观为观众提供了情绪价值。
+              </p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col md:flex-row gap-6">
+            <div class="md:w-1/4">
+              <div class="bg-primary/10 h-full rounded-lg p-6 flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+                  <i class="fa fa-eye text-primary text-2xl"></i>
+                </div>
+                <h3 class="font-serif font-bold text-xl">内容关注</h3>
+              </div>
+            </div>
+            <div class="md:w-3/4">
+              <p class="text-lg mb-4">
+                评论聚焦三大方向：
+              </p>
+              <ul class="space-y-3 ml-5 list-disc">
+                <li class="text-lg">
+                  对"精神内耗"的回应（词云与共现网络均显示"内耗"与"治愈"的强关联），反映当代青年对心理困境的普遍关注
+                </li>
+                <li class="text-lg">
+                  对人生意义的思考（主题建模中"人生哲理感悟"占16.2%），二舅的经历促使观众重新审视生活价值
+                </li>
+                <li class="text-lg">
+                  对社会现实的反思（主题"社会反思"占15.4%），观众借视频探讨苦难、公平等深层社会议题
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="flex flex-col md:flex-row gap-6">
+            <div class="md:w-1/4">
+              <div class="bg-primary/10 h-full rounded-lg p-6 flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+                  <i class="fa fa-share-alt text-primary text-2xl"></i>
+                </div>
+                <h3 class="font-serif font-bold text-xl">传播特性</h3>
+              </div>
+            </div>
+            <div class="md:w-3/4 flex items-center">
+              <p class="text-lg">
+                B站评论既保留了平台的社交属性（如"互关"），又展现出超越娱乐的深度思考，这与视频"真实叙事+人文关怀"的创作风格密切相关。
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-12 pt-8 border-t border-gray-200 text-center">
+          <p class="text-xl font-serif italic text-primary">
+            "真实的故事、真诚的表达，仍是引发大众共鸣的核心力量。"
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-dark text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-6 md:mb-0">
+          <div class="flex items-center space-x-2 mb-3">
+            <i class="fa fa-bar-chart text-accent text-xl"></i>
+            <span class="font-serif font-bold text-lg">二舅视频评论分析报告</span>
+          </div>
+          <p class="text-gray-400">基于1500条B站评论数据的可视化分析</p>
+        </div>
+        
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-accent transition-colors">
+            <i class="fa fa-github text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-accent transition-colors">
+            <i class="fa fa-twitter text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-accent transition-colors">
+            <i class="fa fa-linkedin text-xl"></i>
+          </a>
+        </div>
+      </div>
+      
+      <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+        <p>© 2023 二舅视频评论数据分析报告 | 设计与开发</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function() {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 100) {
+        navbar.classList.add('py-2', 'shadow-lg');
+        navbar.classList.remove('py-3', 'shadow-md');
+      } else {
+        navbar.classList.add('py-3', 'shadow-md');
+        navbar.classList.remove('py-2', 'shadow-lg');
+      }
+    });
+    
+    // 移动端菜单切换
+    document.getElementById('menuToggle').addEventListener('click', function() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        // 关闭移动端菜单
+        document.getElementById('mobileMenu').classList.add('hidden');
+        
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+    
+    // 滚动显示动画
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('section-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('.section-fade').forEach(section => {
+      observer.observe(section);
+    });
+    
+    // 情感分析图表
+    const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+    new Chart(sentimentCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['积极评论', '中性评论', '消极评论'],
+        datasets: [{
+          data: [63.7, 20.1, 16.3],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 99, 132, 0.7)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.label}: ${context.raw}%`;
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
